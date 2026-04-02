@@ -7,6 +7,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.9+](https://img.shields.io/badge/Python-3.9%2B-blue.svg)](https://python.org)
 [![OpenClaw Skill](https://img.shields.io/badge/OpenClaw-Skill-blueviolet)](https://docs.openclaw.ai)
+[![Claude Code](https://img.shields.io/badge/Claude%20Code-Skill-blueviolet)](https://claude.ai/code)
 [![Data Source](https://img.shields.io/badge/Data-Sina%20%2B%20Tencent-green)](https://finance.sina.com.cn)
 
 <br>
@@ -19,7 +20,7 @@
 
 <br>
 
-`buy 600900` → 检测上升趋势，提前买入　|　`sell 000001` → 检测下跌趋势，尽快卖出
+`/buy 600900` → 检测上升趋势，提前买入　|　`/sell 000001` → 检测下跌趋势，尽快卖出
 
 [核心逻辑](#核心逻辑) · [安装](#安装) · [使用](#使用) · [因子体系](#6-维趋势因子) · [效果示例](#效果示例)
 
@@ -33,12 +34,12 @@
 
 传统技术分析看 K 线形态，rt-trade-signal 看**趋势方向**：
 
-| 你的意图 | 系统在做什么 | 信号 |
+| 你的指令 | 系统在做什么 | 信号 |
 |---------|-------------|------|
-| `buy` | 检测上升趋势是否正在形成 | ✅ 趋势形成 → 买入 |
-| `buy` | 发现仍在下跌 / 加速下跌中 | ⏳ 趋势未到 → 等待 |
-| `sell` | 检测下跌趋势是否正在形成 | ✅ 趋势形成 → 卖出 |
-| `sell` | 发现仍在上涨 / 加速上涨中 | ⏳ 趋势向上 → 等待 |
+| `/buy 600900` | 检测上升趋势是否正在形成 | ✅ 趋势形成 → 买入 |
+| `/buy 600900` | 发现仍在下跌 / 加速下跌中 | ⏳ 趋势未到 → 等待 |
+| `/sell 000001` | 检测下跌趋势是否正在形成 | ✅ 趋势形成 → 卖出 |
+| `/sell 000001` | 发现仍在上涨 / 加速上涨中 | ⏳ 趋势向上 → 等待 |
 
 > 核心思想：**不预测点位，只判断趋势方向。趋势对了，入场时机自然对。**
 
@@ -79,10 +80,19 @@ SELL 路径：
 
 ## 安装
 
+### Claude Code
+
+```bash
+# 克隆到 Claude Code 的 skills 目录
+git clone https://github.com/CroTuyuzhe/quant-trading-real-time.git ~/.claude/skills/rt-trade-signal
+```
+
+安装后在 Claude Code 中直接输入 `/buy 600900` 或 `/sell 000001` 即可触发。
+
 ### OpenClaw
 
 ```bash
-# 直接安装到 skills 目录
+# 克隆到 OpenClaw 的 skills 目录
 git clone https://github.com/CroTuyuzhe/quant-trading-real-time.git ~/.openclaw/workspace/skills/rt-trade-signal
 ```
 
@@ -100,25 +110,26 @@ pip install akshare
 
 ## 使用
 
-### 触发方式
+### 触发指令
 
-在对话中直接输入：
+在 Claude Code 或 OpenClaw 对话中直接输入：
 
-```
-buy 600900      ← 买入长江电力
-sell 000001     ← 卖出平安银行
-buy 300750      ← 买入宁德时代
-```
+| 指令 | 说明 |
+|------|------|
+| `/buy 600900` | 买入分析 — 长江电力 |
+| `/buy 300750` | 买入分析 — 宁德时代 |
+| `/sell 000001` | 卖出分析 — 平安银行 |
+| `/sell 601318` | 卖出分析 — 中国平安 |
 
-### 单次分析（调试）
+指令格式：`/buy <6位股票代码>` 或 `/sell <6位股票代码>`
+
+### 命令行使用（独立运行）
 
 ```bash
+# 单次分析
 python3 scripts/rt_signal.py --code 600900 --action buy --once
-```
 
-### 循环监控
-
-```bash
+# 循环监控（每 30 秒，最长 30 分钟）
 python3 scripts/rt_signal.py --code 600900 --action buy --interval 30 --max-minutes 30
 ```
 
@@ -137,7 +148,7 @@ python3 scripts/rt_signal.py --code 600900 --action buy --interval 30 --max-minu
 ### 场景一：买入长江电力
 
 ```
-$ python3 scripts/rt_signal.py --code 600900 --action buy --once
+> /buy 600900
 
 📊 趋势驱动买卖信号 | 600900 买入
 ============================================================
@@ -151,7 +162,7 @@ $ python3 scripts/rt_signal.py --code 600900 --action buy --once
 ### 场景二：卖出平安银行（趋势向上，不宜卖）
 
 ```
-$ python3 scripts/rt_signal.py --code 000001 --action sell --once
+> /sell 000001
 
 📊 趋势驱动买卖信号 | 000001 卖出
 ============================================================
@@ -165,7 +176,7 @@ $ python3 scripts/rt_signal.py --code 000001 --action sell --once
 ### 场景三：宁德时代见顶预警
 
 ```
-$ python3 scripts/rt_signal.py --code 300750 --action sell --once
+> /sell 300750
 
 📊 趋势驱动买卖信号 | 300750 卖出
 ============================================================
@@ -213,6 +224,20 @@ rt-trade-signal/
 
 ---
 
-## License
+## Star History
+
+<a href="https://www.star-history.com/?repos=CroTuyuzhe%2Fquant-trading-real-time&type=date">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=CroTuyuzhe/quant-trading-real-time&type=date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=CroTuyuzhe/quant-trading-real-time&type=date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=CroTuyuzhe/quant-trading-real-time&type=date" />
+ </picture>
+</a>
+
+---
+
+<div align="center">
 
 MIT License © [CroTuyuzhe](https://github.com/CroTuyuzhe)
+
+</div>
