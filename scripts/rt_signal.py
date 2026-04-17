@@ -439,17 +439,17 @@ def decide_from_signals(signals: TrendSignals, action: str) -> tuple:
             score += 0.15
             reasons.append("📈价格趋势向上")
 
-        # 抄底信号: 下跌减速 + 见底迹象
+        # 抄底信号: 下跌减速 + 见底迹象（弱信号，减半）
         if s.momentum_dir == "decelerating_down":
-            score += 0.15
+            score += 0.08
             reasons.append("🔄下跌减速，趋势可能反转")
         if s.reversal_hint == "bottoming":
             score += 0.18
             reasons.append("🔃见底信号")
 
-        # 突破信号
+        # 突破信号（pre_breakout 为弱信号，减半）
         if s.breakout_phase == "pre_breakout":
-            score += 0.12
+            score += 0.06
             reasons.append("⚡蓄势待突破")
         elif s.breakout_phase == "confirmed":
             score += 0.20
@@ -504,7 +504,7 @@ def decide_from_signals(signals: TrendSignals, action: str) -> tuple:
             score += 0.20
             reasons.append("🔃见顶信号，卖出")
         if s.momentum_dir == "decelerating_up":
-            score += 0.12
+            score += 0.08
             reasons.append("🔄上涨减速，可能见顶")
 
         # 均线瓦解
@@ -543,22 +543,26 @@ def decide_from_signals(signals: TrendSignals, action: str) -> tuple:
 
     score = round(min(max(score, 0), 1), 3)
 
-    # 决策
+    # 决策（收紧阈值 + 涨跌幅过滤）
+    # 涨跌幅门槛：从 detail 中提取趋势强度
+    trend_str = s.trend_strength if s.trend_strength else 0
+    MIN_TREND_STRENGTH = 0.003  # 近20分钟涨跌幅需 > 0.3%
+
     if action == "buy":
-        if score >= 0.72:
+        if score >= 0.78:
             return score, "🟢买入！", reasons
-        elif score >= 0.62:
-            # 需要有至少一个正向趋势信号加持
-            has_positive = any("📈" in r or "🔄" in r or "🔃" in r or "⚡" in r or "🚀" in r or "📊多头" in r for r in reasons)
-            if has_positive:
+        elif score >= 0.70:
+            # 需要至少2个正向趋势信号 + 涨幅过滤
+            positive_signals = [r for r in reasons if "📈" in r or "🔄" in r or "🔃" in r or "⚡" in r or "🚀" in r or "📊多头" in r]
+            if len(positive_signals) >= 2 and trend_str >= MIN_TREND_STRENGTH:
                 return score, "🟢买入！", reasons
         return score, "⏳等待", reasons
     else:
-        if score >= 0.72:
+        if score >= 0.78:
             return score, "🔴卖出！", reasons
-        elif score >= 0.62:
-            has_negative = any("📉" in r or "🔃" in r or "⛔突破" in r or "📊空头" in r or "📊多头排列瓦解" in r for r in reasons)
-            if has_negative:
+        elif score >= 0.70:
+            negative_signals = [r for r in reasons if "📉" in r or "🔃" in r or "⛔突破" in r or "📊空头" in r or "📊多头排列瓦解" in r]
+            if len(negative_signals) >= 2 and trend_str >= MIN_TREND_STRENGTH:
                 return score, "🔴卖出！", reasons
         return score, "⏳等待", reasons
 
